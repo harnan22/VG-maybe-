@@ -50,9 +50,15 @@ export class WebhookController {
     private async handleUserCreated(userData: any) {
         console.log('👤 Creating user from webhook:', userData.id);
 
+        // Validate email exists
+        const email = userData.email_addresses?.[0]?.email_address;
+        if (!email) {
+            throw new Error('User email is required but not provided in webhook data');
+        }
+
         const user = await this.clerkUserService.findOrCreateUser({
             clerkId: userData.id,
-            email: userData.email_addresses[0]?.email_address || '',
+            email,
             firstName: userData.first_name || '',
             lastName: userData.last_name || '',
             profileImageUrl: userData.profile_image_url,

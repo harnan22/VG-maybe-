@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Document } from '../entities/document.entity';
+import { Document, DocumentStatus } from '../entities/document.entity';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 
@@ -48,8 +48,12 @@ export class DocumentsService {
   }
 
   async findByStatus(status: string): Promise<Document[]> {
+    // Validate that status is a valid DocumentStatus enum value
+    if (!Object.values(DocumentStatus).includes(status as DocumentStatus)) {
+      throw new BadRequestException(`Invalid status: ${status}. Valid statuses are: ${Object.values(DocumentStatus).join(', ')}`);
+    }
     return this.documentRepository.find({
-      where: { status: status as any },
+      where: { status: status as DocumentStatus },
       relations: ['author', 'files'],
     });
   }
@@ -80,7 +84,7 @@ export class DocumentsService {
 
   async remove(id: string): Promise<void> {
     const document = await this.findOne(id);
-    document.status = 'DELETED' as any;
+    document.status = DocumentStatus.DELETED;
     await this.documentRepository.save(document);
   }
 

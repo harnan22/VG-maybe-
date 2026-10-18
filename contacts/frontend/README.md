@@ -1,18 +1,49 @@
 # VOICE-GUARD Login Portal
 
-A modern, responsive login portal UI for the VOICE-GUARD application.
+A modern, responsive login portal with Clerk authentication for the VOICE-GUARD application.
 
 ## 🎨 Features
 
+- **Clerk Authentication**: Secure authentication powered by Clerk
 - **Modern Design**: Clean, professional interface with smooth animations
 - **Responsive**: Works perfectly on desktop, tablet, and mobile devices
 - **Form Validation**: Client-side validation with helpful error messages
 - **Tab Toggle**: Easy switching between Login and Sign Up modes
-- **Social Login**: UI for Google and GitHub authentication
+- **Social Login**: Google and GitHub OAuth authentication via Clerk
+- **Email Verification**: Secure email verification flow
 - **Loading States**: Visual feedback during form submission
 - **Accessible**: Keyboard navigation and screen reader friendly
+- **Protected Dashboard**: User dashboard with profile information
 
 ## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- A Clerk account (sign up at [clerk.com](https://clerk.com))
+
+### Clerk Setup
+
+1. **Create a Clerk Application**
+   - Go to [Clerk Dashboard](https://dashboard.clerk.com)
+   - Click "Add application" or "Create application"
+   - Choose a name for your application (e.g., "Voice Guard")
+   - Select your preferred sign-in methods (Email, Google, GitHub, etc.)
+
+2. **Get Your Publishable Key**
+   - In your Clerk dashboard, go to **API Keys** section
+   - Copy the **Publishable Key** (starts with `pk_test_` or `pk_live_`)
+
+3. **Configure Environment Variables**
+   - Create a `.env` file in the `frontend` directory:
+     ```bash
+     cd frontend
+     touch .env
+     ```
+   - Add your Clerk publishable key:
+     ```env
+     VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+     ```
 
 ### Installation
 
@@ -33,7 +64,7 @@ Run the development server:
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:5173`
 
 ### Build
 
@@ -49,28 +80,33 @@ npm run preview
 
 ## 🎯 Usage
 
-### Login Mode
-- Enter your email and password
-- Optional: Check "Remember me"
-- Click "Sign In" or use "Forgot password?" link
+### Sign Up
+1. Click on the "Sign Up" tab
+2. Enter your first name and last name
+3. Enter your email address
+4. Create a password (minimum 8 characters)
+5. Click "Create Account"
+6. Check your email for a verification code
+7. Enter the verification code to complete sign up
 
-### Sign Up Mode
-- Enter your full name
-- Enter your email address
-- Create a password (minimum 8 characters)
-- Confirm your password
-- Click "Create Account"
+### Sign In
+1. Enter your email and password
+2. Optional: Check "Remember me"
+3. Click "Sign In"
+4. You'll be redirected to your dashboard upon successful authentication
 
 ### Social Login
 - Click on Google or GitHub buttons to authenticate with those providers
+- Make sure you've enabled these providers in your Clerk dashboard
 
 ## 🔧 Integration with Backend
 
-The frontend is configured to proxy API requests to the backend service running on port 4000. To integrate with your NestJS backend:
+The frontend uses Clerk for authentication. To integrate with your NestJS backend:
 
-1. Ensure your backend is running on `http://localhost:4000`
-2. Update the API endpoints in the components as needed
-3. Configure authentication middleware (Clerk) as per the backend setup
+1. Ensure your backend is running and configured with Clerk
+2. The frontend automatically includes Clerk session tokens in API requests
+3. Your backend should verify these tokens using Clerk's backend SDK
+4. See the `boilerplate-service` README for backend Clerk configuration
 
 ## 📁 Project Structure
 
@@ -78,14 +114,17 @@ The frontend is configured to proxy API requests to the backend service running 
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── LoginPage.jsx      # Main login component
-│   │   └── LoginPage.css       # Login component styles
-│   ├── App.jsx                 # Root application component
+│   │   ├── LoginPage.jsx       # Clerk-integrated login component
+│   │   ├── LoginPage.css       # Login component styles
+│   │   ├── Dashboard.jsx       # Protected dashboard component
+│   │   └── Dashboard.css       # Dashboard styles
+│   ├── App.jsx                 # Root application component with Clerk provider
 │   ├── App.css                 # App styles
-│   ├── main.jsx                # Entry point
+│   ├── main.jsx                # Entry point with ClerkProvider
 │   └── index.css               # Global styles
 ├── index.html                  # HTML template
 ├── vite.config.js              # Vite configuration
+├── .env                        # Environment variables (create this)
 └── package.json                # Dependencies and scripts
 ```
 
@@ -107,13 +146,19 @@ Replace the SVG in the `.logo-icon` section of `LoginPage.jsx` with your own log
 
 ## 🔐 Security Notes
 
-This is a UI demo. For production use:
-- Implement proper backend authentication
-- Add CSRF protection
+This application uses Clerk for authentication, which provides:
+- ✅ Secure session management
+- ✅ JWT token-based authentication
+- ✅ OAuth 2.0 for social logins
+- ✅ Email verification
+- ✅ Password hashing and security best practices
+
+For production use:
 - Use HTTPS
-- Implement rate limiting
-- Add proper session management
-- Secure API endpoints
+- Set up proper CORS policies
+- Configure Clerk webhooks for user events
+- Implement rate limiting on your backend
+- Use environment variables for all sensitive keys
 
 ## 📝 License
 

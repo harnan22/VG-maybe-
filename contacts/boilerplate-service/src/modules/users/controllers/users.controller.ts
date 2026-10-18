@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
@@ -40,8 +41,17 @@ export class UsersController {
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
-  getCurrentUser(@CurrentUser() user: any) {
-    return this.usersService.findOne(user.sub);
+  async getCurrentUser(@CurrentUser() user: any) {
+    // Clerk JWT token uses 'sub' as the user ID (Clerk ID)
+    const clerkId = user?.sub;
+    if (!clerkId) {
+      throw new NotFoundException('Invalid user token: Clerk ID not found');
+    }
+    const dbUser = await this.usersService.findByClerkId(clerkId);
+    if (!dbUser) {
+      throw new NotFoundException('User not found in database. Please ensure user is synced via webhook.');
+    }
+    return dbUser;
   }
 
   @Get(':id')
