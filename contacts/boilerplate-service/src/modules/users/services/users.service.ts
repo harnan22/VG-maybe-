@@ -30,8 +30,7 @@ export class UsersService {
 
     // Create user
     const user = this.userRepository.create(createUserDto);
-    const savedUsers = await this.userRepository.save(user);
-    const savedUser = savedUsers[0];
+    const savedUser = await this.userRepository.save(user);
     // Create person profile
     const personProfile = this.personProfileRepository.create({
       firstName: createUserDto.firstName,
@@ -89,10 +88,14 @@ export class UsersService {
     const updatedUser = await this.userRepository.save(user);
 
     // Update person profile if it exists
-    if (user.personProfile && (updateUserDto.firstName || updateUserDto.lastName)) {
+    if (user.personProfile && ('firstName' in updateUserDto || 'lastName' in updateUserDto)) {
       const personProfile = user.personProfile;
-      if (updateUserDto.firstName) personProfile.firstName = updateUserDto.firstName;
-      if (updateUserDto.lastName) personProfile.lastName = updateUserDto.lastName;
+      if ('firstName' in updateUserDto && updateUserDto.firstName !== undefined) {
+        personProfile.firstName = updateUserDto.firstName;
+      }
+      if ('lastName' in updateUserDto && updateUserDto.lastName !== undefined) {
+        personProfile.lastName = updateUserDto.lastName;
+      }
       await this.personProfileRepository.save(personProfile);
     }
 
@@ -112,8 +115,14 @@ export class UsersService {
     lastName: string;
     profileImageUrl?: string;
   }): Promise<User> {
-    let user = await this.findByClerkId(userData.clerkId || '');
+    let user: User | null = null;
 
+    // Try to find by Clerk ID first if provided
+    if (userData.clerkId) {
+      user = await this.findByClerkId(userData.clerkId);
+    }
+
+    // If not found by Clerk ID, try by email
     if (!user) {
       user = await this.findByEmail(userData.email);
     }

@@ -351,6 +351,28 @@
   flex-shrink: 0;
 }
 
+/* Verification Message */
+.verification-message {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.verification-message p {
+  font-size: 14px;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.verification-email {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 16px;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .login-card {

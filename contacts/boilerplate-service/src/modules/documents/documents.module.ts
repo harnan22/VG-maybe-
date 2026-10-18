@@ -6,10 +6,12 @@ import { DocumentsService } from './services/documents.service';
 import { FilesService } from './services/files.service';
 import { DocumentsController } from './controllers/documents.controller';
 import { FilesController } from './controllers/files.controller';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Document, File]),
+    UsersModule,
   ],
   controllers: [DocumentsController, FilesController],
   providers: [DocumentsService, FilesService],

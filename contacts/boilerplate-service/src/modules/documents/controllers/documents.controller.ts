@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   UseGuards,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DocumentsService } from '../services/documents.service';
@@ -15,19 +17,32 @@ import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { ClerkAuthGuard } from '../../../common/guards/clerk-auth.guard';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { UsersService } from '../../users/services/users.service';
 
 @ApiTags('documents')
 @Controller('documents')
 @UseGuards(ClerkAuthGuard)
 @ApiBearerAuth()
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new document' })
   @ApiResponse({ status: 201, description: 'Document created successfully' })
-  create(@Body() createDocumentDto: CreateDocumentDto, @CurrentUser() user: any) {
-    return this.documentsService.create(createDocumentDto, user.sub);
+  async create(@Body() createDocumentDto: CreateDocumentDto, @CurrentUser() user: any) {
+    const clerkId = user?.sub;
+    if (!clerkId) {
+      throw new NotFoundException('Invalid user token: Clerk ID not found');
+    }
+    // Get database user ID from Clerk ID
+    const dbUser = await this.usersService.findByClerkId(clerkId);
+    if (!dbUser) {
+      throw new NotFoundException('User not found in database. Please ensure user is synced via webhook.');
+    }
+    return this.documentsService.create(createDocumentDto, dbUser.id);
   }
 
   @Get()
@@ -58,14 +73,26 @@ export class DocumentsController {
   @ApiResponse({ status: 200, description: 'Search results retrieved successfully' })
   @ApiQuery({ name: 'q', description: 'Search query' })
   search(@Query('q') query: string) {
+    if (!query || query.trim().length === 0) {
+      throw new BadRequestException('Search query is required');
+    }
     return this.documentsService.searchDocuments(query);
   }
 
   @Get('my-documents')
   @ApiOperation({ summary: 'Get current user documents' })
   @ApiResponse({ status: 200, description: 'User documents retrieved successfully' })
-  getMyDocuments(@CurrentUser() user: any) {
-    return this.documentsService.findByAuthor(user.sub);
+  async getMyDocuments(@CurrentUser() user: any) {
+    const clerkId = user?.sub;
+    if (!clerkId) {
+      throw new NotFoundException('Invalid user token: Clerk ID not found');
+    }
+    // Get database user ID from Clerk ID
+    const dbUser = await this.usersService.findByClerkId(clerkId);
+    if (!dbUser) {
+      throw new NotFoundException('User not found in database. Please ensure user is synced via webhook.');
+    }
+    return this.documentsService.findByAuthor(dbUser.id);
   }
 
   @Get(':id')

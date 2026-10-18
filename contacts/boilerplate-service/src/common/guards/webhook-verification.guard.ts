@@ -7,7 +7,6 @@ export class WebhookVerificationGuard implements CanActivate {
 
   constructor() {
     const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-    console.log('webhookSecret', webhookSecret);
     if (!webhookSecret) {
       throw new Error('CLERK_WEBHOOK_SECRET is not configured');
     }
